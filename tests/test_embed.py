@@ -125,3 +125,17 @@ def test_frames_of_sheets_and_strips(tmp_path):
     out = M.prepare(str(p), 64, (32, 32, 0, 0))
     assert out.size == (64, 64)
     assert out.getpixel((32, 32))[0] > 200  # the blob fills the middle, not a speck at the bottom
+
+
+def test_needs_download(tmp_path, monkeypatch):
+    """The first use of a model announces its download; a cached model or a local folder doesn't."""
+    import sys
+    import types
+
+    cache = {"google/cached-model": "/hf/cache/config.json"}
+    hub = types.ModuleType("huggingface_hub")
+    hub.try_to_load_from_cache = lambda repo, name: cache.get(repo)
+    monkeypatch.setitem(sys.modules, "huggingface_hub", hub)
+    assert M.needs_download("google/new-model")
+    assert not M.needs_download("google/cached-model")
+    assert not M.needs_download(str(tmp_path))  # a model in a local folder

@@ -218,7 +218,7 @@ images that look like a given one:
 
 ```sh
 uv tool install --force "assetcat[ai]"     # adds PyTorch
-assetcat classify --kind embed            # the model downloads on first use (~1.5 GB)
+assetcat classify --kind embed            # the model downloads on first use (~1.5 GB, shown)
 assetcat search --meaning a slime monster --type character,sheet
 assetcat search --similar "Kenney Game Assets All-in-1/2D assets/Tiny Dungeon/Tiles/tile_0100.png"
 ```
@@ -230,7 +230,13 @@ The model runs inside AssetCat, no server needed. It uses an NVIDIA GPU or Apple
 there is one, and the CPU otherwise (much slower). On an M4 Pro Mac it does about 115 images a
 second, so about 200,000 images take half an hour; duplicates are done once, and later runs only
 add new images. On Windows, PyPI's PyTorch is CPU-only; for an NVIDIA GPU, install the CUDA build
-(see [pytorch.org](https://pytorch.org/get-started/locally/)).
+instead, which uv picks to match your driver:
+
+```sh
+uv tool install --force --torch-backend auto "assetcat[ai]"
+```
+
+`classify --kind embed` says which device it uses ("... on cuda").
 
 The default model is `google/siglip2-base-patch16-256`. Larger SigLIP 2 models
 (`siglip2-large-patch16-256`, `siglip2-so400m-patch16-256`) find a little more on hard queries

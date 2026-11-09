@@ -50,6 +50,17 @@ def model_name(uc: dict, override: str | None = None) -> str:
 
 # --- the model ---------------------------------------------------------------------------------
 
+def needs_download(name: str) -> bool:
+    """Whether the model isn't in the local Hugging Face cache yet (a local folder never is)."""
+    if Path(name).is_dir():
+        return False
+    try:
+        from huggingface_hub import try_to_load_from_cache
+    except ImportError:
+        return False
+    return not isinstance(try_to_load_from_cache(name, "config.json"), str)
+
+
 class Encoder:
     """A SigLIP-style model: images and texts to normalized vectors in the same space."""
 
@@ -63,8 +74,14 @@ class Encoder:
             from transformers import AutoModel, AutoProcessor
         except ImportError as e:
             raise EmbedError(INSTALL_HINT) from e
-        transformers.logging.set_verbosity_error()  # config notes and the weight-loading bar
-        transformers.logging.disable_progress_bar()
+        transformers.logging.set_verbosity_error()  # config notes
+        if needs_download(name):  # first use: say so, and show the download's progress bars
+            from .config import eprint
+
+            eprint(f"downloading {name} (first use only; the default model is about 1.5 GB)...")
+            transformers.logging.enable_progress_bar()
+        else:
+            transformers.logging.disable_progress_bar()  # the weight-loading bar on every run
         self.torch = torch
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         self.dtype = torch.float32 if self.device == "cpu" else torch.float16
