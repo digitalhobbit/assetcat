@@ -1,0 +1,97 @@
+# Tag vocabulary. `assetcat classify` asks a model to tag each pack from the pack-level
+# namespaces below (their values, `max`, `about` and `hints` make up the prompt), and the browse
+# UI shows namespaces with `facet = true` as filters. Your own tags (`tags` in curation) can be
+# anything; a bare value like "pixel-art" is read as "style:pixel-art". Edit freely: changing
+# this file makes earlier AI tags outdated, and the next `assetcat classify` redoes them.
+format = 1
+
+# Pack-level namespaces describe what a pack is; asset-level ones what a single file shows.
+[namespaces.kind]
+level = "pack"
+facet = true
+max = 2
+about = "what the pack is for."
+values = ["ui", "tileset", "characters", "icons", "vfx", "backgrounds", "props", "music", "sfx", "fonts", "3d"]
+
+[namespaces.kind.hints]
+tileset = "tiles for building levels or maps"
+characters = "player, NPC or enemy sprites"
+props = "objects and items to place in a scene"
+icons = "small symbolic images (inventory, skills, buttons)"
+vfx = "effects: explosions, magic, particles"
+3d = "3D models"
+
+[namespaces.style]
+level = "pack"
+facet = true
+max = 2
+about = "how the art LOOKS in the images. File formats don't decide it: many packs ship SVG or other vector sources next to PNGs, whatever their look."
+values = ["pixel-art", "vector", "hand-drawn", "painted", "low-poly", "realistic"]
+
+[namespaces.style.hints]
+pixel-art = "visible square pixels, usually small images (8-64 px)"
+vector = "flat colors, clean smooth edges"
+hand-drawn = "visible pen, ink or pencil strokes"
+painted = "brush or painterly shading"
+low-poly = "3D with visible flat facets"
+realistic = "photographic or detailed realistic rendering"
+
+[namespaces.perspective]
+level = "pack"
+facet = true
+max = 1
+about = "the camera view 2D art is drawn for. Leave it empty for 3D models (they can be viewed from any side), UI, icons, fonts and audio."
+values = ["top-down", "side", "isometric", "first-person"]
+
+[namespaces.perspective.hints]
+top-down = "seen from above (most RPG, roguelike and racing maps)"
+side = "side view (platformers)"
+isometric = "2D art in a diagonal 3/4 view on a diamond grid"
+
+[namespaces.genre]
+level = "pack"
+facet = true
+max = 2
+about = "the setting or theme, if the art has one."
+values = ["fantasy", "sci-fi", "modern", "horror", "western", "cute"]
+
+[namespaces.mood]
+level = "pack"
+max = 2
+about = "for music and sound packs only: how it feels."
+values = ["calm", "tense", "epic", "cheerful", "dark"]
+
+[namespaces.subject]
+level = "asset"
+# What single images show, scored from the image vectors (`assetcat classify --kind embed`):
+# each image against "a <subject>" (dashes become spaces). An image gets up to `max` subjects
+# whose probability is at least `threshold` (or its own in `thresholds`: some words match too
+# much). Add or remove subjects freely: the next `classify --kind embed` re-scores the stored
+# vectors without looking at the images again; a threshold change only needs `assetcat index`.
+template = "a {}"
+threshold = 0.3
+thresholds = { slime = 0.5 }
+max = 2
+values = [
+  "knight", "warrior", "archer", "wizard", "witch", "king", "princess", "villager", "merchant", "soldier", "ninja",
+  "pirate", "robot", "alien", "astronaut", "zombie", "skeleton", "ghost", "vampire", "demon", "dragon", "slime",
+  "goblin", "orc", "spider", "bat", "rat", "wolf", "bear", "snake", "bird", "fish", "cat", "dog", "horse", "cow",
+  "pig", "chicken", "frog", "insect", "crab", "octopus", "monster",
+  "sword", "axe", "bow", "arrow", "spear", "hammer", "dagger", "staff", "wand", "shield", "helmet", "armor", "boots",
+  "ring", "amulet", "gun", "bomb", "potion", "scroll", "book", "key", "coin", "gem", "crystal", "treasure-chest",
+  "bag", "apple", "bread", "meat", "mushroom", "flower", "bottle", "torch", "candle",
+  "tree", "bush", "grass", "rock", "mountain", "cloud", "water", "lava", "ice", "sand", "snow", "door", "window",
+  "wall", "floor", "stairs", "bridge", "fence", "house", "castle", "tower", "tent", "ladder", "barrel", "crate",
+  "table", "chair", "bed", "statue", "gravestone", "sign",
+  "car", "truck", "tank", "spaceship", "airplane", "boat", "planet", "star", "moon", "sun",
+  "button", "heart", "health-bar", "panel", "cursor",
+  "explosion", "fire", "smoke", "lightning", "magic", "sparkle", "blood",
+]
+
+[aliases]
+"8bit" = "style:pixel-art"
+"8-bit" = "style:pixel-art"
+"16-bit" = "style:pixel-art"
+"pixel" = "style:pixel-art"
+"gui" = "kind:ui"
+"scifi" = "genre:sci-fi"

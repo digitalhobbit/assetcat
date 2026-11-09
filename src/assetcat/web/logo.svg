@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>AssetCat</title>
+  <!-- the cat, peeking out of the box -->
+  <path d="M13 42 V18 L15 2 L28 12 H36 L49 2 L51 18 V42 Z" fill="#5fb8b0"/>
+  <path d="M17.5 14 L18.5 7 L25 12.5 Z M46.5 14 L45.5 7 L39 12.5 Z" fill="#3f8f88"/>
+  <ellipse cx="24" cy="24" rx="3.4" ry="4.4" fill="#16171b"/>
+  <ellipse cx="40" cy="24" rx="3.4" ry="4.4" fill="#16171b"/>
+  <circle cx="25.2" cy="22.4" r="1.1" fill="#ffffff"/>
+  <circle cx="41.2" cy="22.4" r="1.1" fill="#ffffff"/>
+  <path d="M29.5 30.5 H34.5 L32 33.5 Z" fill="#16171b"/>
+  <!-- the box -->
+  <rect x="4" y="38" width="56" height="23" rx="4" fill="#e8a33d"/>
+  <rect x="4" y="38" width="56" height="6" rx="3" fill="#d9653b"/>
+  <rect x="16" y="34.5" width="10" height="8" rx="4" fill="#5fb8b0"/>
+  <rect x="38" y="34.5" width="10" height="8" rx="4" fill="#5fb8b0"/>
+  <!-- the catalog label -->
+  <rect x="23" y="48" width="18" height="9" rx="2" fill="#fbe9c6"/>
+  <rect x="26" y="50.8" width="12" height="1.6" rx=".8" fill="#c98a2c"/>
+  <rect x="26" y="53.6" width="8" height="1.6" rx=".8" fill="#c98a2c"/>
+</svg>

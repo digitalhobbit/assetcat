@@ -1,0 +1,42 @@
+# License table. Groups and packs refer to these by key (license = "cc0").
+# Add one entry per distinct license you own assets under. Summaries are short reminders, not
+# legal advice: check the actual terms that came with your purchase before shipping.
+# verified = false means nobody has checked the summary against those terms yet.
+format = 1
+
+[cc0]
+name = "CC0 1.0 (public domain)"
+url = "https://creativecommons.org/publicdomain/zero/1.0/"
+summary = "Use for anything, commercial included. No attribution required."
+attribution_required = false
+verified = true
+
+[cc-by-4]
+name = "CC BY 4.0"
+url = "https://creativecommons.org/licenses/by/4.0/"
+summary = "Use for anything, commercial included, with credit to the author."
+attribution_required = true
+verified = true
+
+[cc-by-sa-4]
+name = "CC BY-SA 4.0"
+url = "https://creativecommons.org/licenses/by-sa/4.0/"
+summary = "Use with credit; adaptations of the assets must be shared under the same license."
+attribution_required = true
+verified = true
+
+[gamedev-market]
+name = "GameDev Market license"
+summary = "Use in games you make, commercial included; don't resell or redistribute the assets themselves."
+attribution_required = false
+verified = false
+
+[asset-store-eula]
+name = "Unity Asset Store EULA"
+summary = "Standard EULA: use in your projects, commercial included; no redistribution of the source assets."
+attribution_required = false
+verified = false
+
+[unknown]
+name = "Unknown"
+summary = "Not recorded yet."

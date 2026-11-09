@@ -1,0 +1,71 @@
+[project]
+name = "assetcat"
+version = "1.0.0"
+description = "AssetCat: index, search and browse a big game asset library, with licenses and AI provenance in plain files."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+keywords = ["game assets", "asset library", "sprites", "gamedev", "asset browser", "licenses"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Games/Entertainment",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Multimedia :: Sound/Audio",
+]
+dependencies = [
+    "pillow>=11.0",
+    "mutagen>=1.47",
+    "fonttools>=4.55",
+    "striprtf>=0.0.26",
+    "pypdf>=5.0",
+    "platformdirs>=4.3",
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "tomlkit>=0.13",
+    "numpy>=1.26",
+    "soundfile>=0.14.0",
+]
+
+[project.optional-dependencies]
+# search by meaning: an image-text model run in-process (weights download on first use)
+ai = [
+    "torch>=2.4",
+    "transformers>=4.49",
+]
+
+[project.scripts]
+assetcat = "assetcat.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/digitalhobbit/assetcat"
+Repository = "https://github.com/digitalhobbit/assetcat"
+Issues = "https://github.com/digitalhobbit/assetcat/issues"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "httpx>=0.28",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/assetcat"]
+
+[tool.hatch.build.targets.sdist]
+# the source package: code, tests and docs to build it; screenshots stay on GitHub
+exclude = ["docs/", ".github/", "scripts/"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient` is deprecated"]
