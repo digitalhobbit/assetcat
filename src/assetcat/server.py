@@ -469,8 +469,9 @@ def create_app(cfg: Config) -> FastAPI:
             key += "|trim"
         out = thumbs_dir / str(s) / (hashlib.blake2b(key.encode(), digest_size=10).hexdigest() + ".webp")
         headers = {"Cache-Control": "max-age=604800"}
-        if out.exists():
-            return FileResponse(out, media_type="image/webp", headers=headers)
+        cached = read_cached(out)
+        if cached is not None:
+            return Response(cached, media_type="image/webp", headers=headers)
         try:
             data = make_thumb(src_fs, s, trim)
         except Exception as e:  # noqa: BLE001
@@ -488,8 +489,9 @@ def create_app(cfg: Config) -> FastAPI:
         key = hashlib.blake2b(f"{path}|{r['size']}|{r['mtime']}|{n}".encode(), digest_size=10).hexdigest()
         out = cfg.cache / "waves" / f"{key}.json"
         headers = {"cache-control": "max-age=86400"}
-        if out.exists():
-            return Response(out.read_bytes(), media_type="application/json", headers=headers)
+        cached = read_cached(out)
+        if cached is not None:
+            return Response(cached, media_type="application/json", headers=headers)
         peaks = audio_peaks(cfg.fs(path), n)
         if peaks is None:
             raise HTTPException(415, "can't decode this audio file")
@@ -845,6 +847,22 @@ def audio_peaks(path: str, n: int) -> list[float] | None:
         return None
     top = max(peaks, default=0) or 1.0
     return [round(p / top, 3) for p in peaks[:n]]
+
+
+def read_cached(f: Path, tries: int = 4) -> bytes | None:
+    """A cache file's bytes, or None if it isn't there. On Windows, opening a file while another
+    request renames a fresh copy over it fails for a moment (PermissionError): retry, then give
+    up and let the caller make it again."""
+    import time
+
+    for n in range(tries):
+        try:
+            return f.read_bytes()
+        except FileNotFoundError:
+            return None
+        except PermissionError:
+            time.sleep(0.02 * (n + 1))
+    return None
 
 
 def cache_file(out: Path, data: bytes, tries: int = 5) -> bool:

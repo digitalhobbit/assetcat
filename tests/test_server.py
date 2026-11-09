@@ -156,6 +156,27 @@ def test_thumbnail_served_even_if_cache_write_fails(env, client, monkeypatch, ca
     assert not list((env["cfg"].cache / "thumbs").rglob("*.tmp"))
 
 
+def test_cached_thumbnail_read_while_being_replaced(env, client, monkeypatch):
+    """Windows refuses to open a file for a moment while another request renames a fresh copy
+    over it: the cached thumbnail is read again, not served as an error."""
+    from pathlib import Path
+
+    path = "Bundles/Space Bundle/Space Ships/Preview.png"
+    first = client.get("/thumb", params={"path": path, "s": 64})  # now it's cached
+    assert first.status_code == 200
+    real, calls = Path.read_bytes, []
+
+    def busy_once(self):
+        if self.suffix == ".webp" and not calls:
+            calls.append(self)
+            raise PermissionError(13, "Permission denied", str(self))
+        return real(self)
+
+    monkeypatch.setattr(Path, "read_bytes", busy_once)
+    r = client.get("/thumb", params={"path": path, "s": 64})
+    assert calls and r.status_code == 200 and r.content == first.content
+
+
 def _nodes(tree):
     for n in tree:
         yield n
