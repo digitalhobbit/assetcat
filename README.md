@@ -12,6 +12,9 @@ from the command line. What you know about the library (each bundle's license, w
 is human-made and why you believe so, notes, tags, shortlists) lives in **plain TOML files next
 to the library**, so it syncs with it, diffs cleanly and survives any rebuild of the index.
 
+The story behind it (why I built it and how it works with local AI) is in
+[this GammaVibe post](https://gammavibe.substack.com/p/assetcat-finding-the-right-game-asset).
+
 - **Licenses and AI provenance:** set them once per bundle or store, override per pack; every
   pack and file shows what applies and where it came from.
 - **Browse:** a wall of pack covers, a pack page with its readme and license, an image viewer
@@ -370,6 +373,13 @@ projects).
 
 Which of these comes first depends on what people ask for:
 [open an issue](https://github.com/digitalhobbit/assetcat/issues) with what you need.
+
+## Follow along
+
+I build games and tools like this one and write about it on
+[GammaVibe](https://gammavibe.substack.com), starting with
+[how AssetCat came about](https://gammavibe.substack.com/p/assetcat-finding-the-right-game-asset).
+I'm also [@GammaVibe on X](https://x.com/GammaVibe).
 
 ## Development
 
