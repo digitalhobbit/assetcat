@@ -12,7 +12,8 @@ from the command line. What you know about the library (each bundle's license, w
 is human-made and why you believe so, notes, tags, shortlists) lives in **plain TOML files next
 to the library**, so it syncs with it, diffs cleanly and survives any rebuild of the index.
 
-The story behind it (why I built it and how it works with local AI) is in
+To see it in action, watch the [video walkthrough](https://youtu.be/GXIc4KdZPik). The story
+behind it (why I built it and how it works with local AI) is in
 [this GammaVibe post](https://gammavibe.substack.com/p/assetcat-finding-the-right-game-asset).
 
 - **Licenses and AI provenance:** set them once per bundle or store, override per pack; every
@@ -379,7 +380,8 @@ Which of these comes first depends on what people ask for:
 I build games and tools like this one and write about it on
 [GammaVibe](https://gammavibe.substack.com), starting with
 [how AssetCat came about](https://gammavibe.substack.com/p/assetcat-finding-the-right-game-asset).
-I'm also [@GammaVibe on X](https://x.com/GammaVibe).
+Videos are on [YouTube](https://www.youtube.com/@GammaVibeLab), and I'm also
+[@GammaVibe on X](https://x.com/GammaVibe).
 
 ## Development
 
