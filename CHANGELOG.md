@@ -18,6 +18,8 @@ What changed in each release of `assetcat`, newest first. Versions are on
   properly. Files whose encoding had to be guessed are listed in `doctor`. The next `index`
   re-reads doc files once.
 - Pack pages in the browse UI open for packs whose ids aren't ASCII.
+- Windows: the CLI no longer crashes printing names beyond the console's code page (such as
+  `ドット工房`) when its output is piped or redirected, as Claude's skill does. Output is UTF-8.
 
 ### Check after upgrading
 

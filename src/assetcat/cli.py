@@ -55,11 +55,21 @@ def unmangle_windows_args(argv: list[str]) -> list[str]:
     return out
 
 
+def utf8_output():
+    """Write UTF-8 when stdout/stderr would use a narrower encoding (Windows, piped or redirected:
+    cp1252), which can't print paths like curation/packs/ドット工房.toml and crashes."""
+    for s in (sys.stdout, sys.stderr):
+        enc = (getattr(s, "encoding", None) or "").lower().replace("-", "")
+        if enc != "utf8" and hasattr(s, "reconfigure"):
+            s.reconfigure(encoding="utf-8")
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
         if sys.platform == "win32":
             argv = unmangle_windows_args(argv)
+        utf8_output()
     ap = argparse.ArgumentParser(prog="assetcat", description="Index, search and browse a game asset library.")
     ap.add_argument("--version", action="version", version=f"assetcat {__version__}")
     _location_args(ap, True)

@@ -250,3 +250,17 @@ def test_old_doc_text_is_reread(clash):
 
 def test_clash_library_untouched(clash):
     assert snapshot(clash["lib"]) == clash["before"]
+
+
+def test_cli_output_beyond_the_console_encoding(env):
+    # Windows writes piped or redirected output as cp1252 unless told otherwise
+    import os
+    import subprocess
+    import sys
+
+    run = "import sys; from assetcat.cli import main; sys.exit(main())"
+    environ = {**os.environ, "PYTHONIOENCODING": "cp1252", "PYTHONUTF8": "0"}
+    for args in (["show", "ドット絵パック"], ["packs", "--json"]):
+        r = subprocess.run([sys.executable, "-c", run, *args], capture_output=True, env=environ)
+        assert r.returncode == 0, r.stderr.decode("utf-8", "replace")
+        assert "ドット絵パック" in r.stdout.decode("utf-8")
