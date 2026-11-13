@@ -1,6 +1,6 @@
 [project]
 name = "assetcat"
-version = "1.0.1"
+version = "1.0.2"
 description = "AssetCat: index, search and browse a big game asset library, with licenses and AI provenance in plain files."
 readme = "README.md"
 license = "MIT"

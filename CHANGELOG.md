@@ -3,7 +3,7 @@
 What changed in each release of `assetcat`, newest first. Versions are on
 [PyPI](https://pypi.org/project/assetcat/); pin one with `uvx assetcat@X.Y.Z`.
 
-## Unreleased
+## 1.0.2 (2026-11-12)
 
 ### Fixed
 
