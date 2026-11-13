@@ -63,14 +63,17 @@ with `tests/make_library.py`.
 
 ## Releases
 
-Bump `version` in `pyproject.toml` and `src/assetcat/__init__.py`, commit, then tag `vX.Y.Z` and
-push the tag. CI tests it on all three systems and publishes it to PyPI (trusted publishing,
-the `publish` job in `ci.yml`; it refuses a tag that doesn't match the version). A published
-version can't be replaced, only yanked: fix forward with the next patch version. Other repos pin
-a version with `uvx assetcat@X.Y.Z`.
+Bump `version` in `pyproject.toml` and `src/assetcat/__init__.py`, turn `## Unreleased` in
+`CHANGELOG.md` into `## X.Y.Z (date)`, commit, then tag `vX.Y.Z` and push the tag. CI tests it
+on all three systems and publishes it to PyPI (trusted publishing, the `publish` job in
+`ci.yml`; it refuses a tag that doesn't match the version). A published version can't be
+replaced, only yanked: fix forward with the next patch version. Other repos pin a version with
+`uvx assetcat@X.Y.Z`.
 
 ## Workflow
 
 - Commit only when asked.
+- Changes users would notice go in `CHANGELOG.md` under `## Unreleased` (Fixed / Added / Changed,
+  plus "Check after upgrading" when they may need to act), in the same commit as the change.
 - After changing the UI or server, run the UI check against a real `assetcat serve`, not only
   the tests.

@@ -282,7 +282,7 @@ def _rebuild(con, cfg: Config, cur: Curation, lay: Layout) -> dict:
     eprint(f"rebuild: {len(all_assets)} assets ({time.time() - t0:.1f}s)")
     return {"groups": len(lay.groups), "packs": len(lay.packs), "assets": len(all_assets),
             "unused_curation": lay.unused_curation, "missing_sections": lay.missing_sections,
-            "curation_problems": cur.problems}
+            "key_collisions": lay.key_collisions, "curation_problems": cur.problems}
 
 
 def _assets_for(p: Pack, rows: dict) -> tuple[list[dict], dict[str, int]]:

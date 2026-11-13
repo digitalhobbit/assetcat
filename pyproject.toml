@@ -32,6 +32,7 @@ dependencies = [
     "tomlkit>=0.13",
     "numpy>=1.26",
     "soundfile>=0.14.0",
+    "charset-normalizer>=3.4",
 ]
 
 [project.optional-dependencies]
@@ -48,6 +49,7 @@ assetcat = "assetcat.cli:main"
 Homepage = "https://github.com/digitalhobbit/assetcat"
 Repository = "https://github.com/digitalhobbit/assetcat"
 Issues = "https://github.com/digitalhobbit/assetcat/issues"
+Changelog = "https://github.com/digitalhobbit/assetcat/blob/main/CHANGELOG.md"
 
 [dependency-groups]
 dev = [

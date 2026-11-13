@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
+import unicodedata
 
 _CATS = {
     "image": "png gif jpg jpeg bmp tga webp",
@@ -60,8 +62,47 @@ def category(ext: str) -> str:
 
 
 def slugify(s: str) -> str:
-    s = re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
+    """Key for a folder name: lowercase letters and digits of any script, runs of anything else
+    as "-". Accents on Latin letters are dropped (Ógma -> ogma, İstanbul -> istanbul); other
+    scripts are kept whole (ドット絵パック). ASCII names give the same keys as before 1.0.2, and
+    composed and decomposed spellings (NFC, NFD) of a name give the same key."""
+    out, ascii_base = [], False
+    for c in unicodedata.normalize("NFKD", s):
+        if unicodedata.combining(c):
+            if not ascii_base:
+                out.append(c)
+            continue
+        ascii_base = c < "\x80"
+        out.append(c)
+    s = unicodedata.normalize("NFC", "".join(out)).lower()
+    s = "".join(c if c.isalnum() or unicodedata.category(c)[0] == "M" else "-" for c in s)
+    s = re.sub(r"-+", "-", s).strip("-")
     return s or "x"
+
+
+def unique_keys(names) -> tuple[dict[str, str], list[list[str]]]:
+    """Keys for sibling folders: name -> key, plus the groups of names whose slugs collided.
+    In a collision the first name (sorted) keeps the plain slug and the others get a short hash
+    of their own name, so a key doesn't depend on which other folders exist."""
+    by: dict[str, list[str]] = {}
+    for n in sorted(set(names), key=lambda n: (n.lower(), n)):
+        by.setdefault(slugify(n), []).append(n)
+    keys: dict[str, str] = {}
+    taken = set(by)
+    clashes = []
+    for slug, ns in by.items():
+        keys[ns[0]] = slug
+        if len(ns) > 1:
+            clashes.append(ns)
+        for n in ns[1:]:
+            h = hashlib.blake2b(unicodedata.normalize("NFC", n).encode("utf-8"), digest_size=8).hexdigest()
+            k, i = f"{slug}-{h[:4]}", 4
+            while k in taken:  # practically never: another folder's slug already looks like this
+                i += 2
+                k = f"{slug}-{h[:i]}"
+            taken.add(k)
+            keys[n] = k
+    return keys, clashes
 
 
 _CAMEL = re.compile(r"(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|(?<=[A-Za-z])(?=[0-9])|(?<=[0-9])(?=[A-Za-z])")

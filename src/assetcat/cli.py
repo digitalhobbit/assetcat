@@ -195,6 +195,8 @@ def main(argv=None):
             print(f"new curation stub: {c}")
         for m in s["missing_sections"]:
             print(f"section folder not found (skipped): {m}")
+        for k in s.get("key_collisions", []):
+            print(f"folders with the same key (the later ones get a suffix): {k}")
         if s["unused_curation"] or s["curation_problems"]:
             print("curation issues: run `assetcat doctor`")
         return
@@ -750,6 +752,9 @@ FIXES = {
         "add it there or fix the spelling. A file that doesn't parse is ignored until it's fixed.",
     "unused_curation_keys": "The folder was renamed, moved or deleted. Rename the [packs.\"<key>\"] table "
         "to the folder's new key (the Layout page and `assetcat packs --tree` show keys), or delete it.",
+    "key_collisions": "These sibling folders' names give the same key (e.g. \"Tiles!\" and \"tiles\"), so all "
+        "but the first get a short suffix. Their keys are stable, but a new folder with a clashing name that sorts "
+        "first would take the plain key. Rename a folder to keep the keys unambiguous.",
     "missing_sections": "Fix the section's `folder` in catalog.toml (relative to the library), or remove the section.",
     "license_unknown": "Set the license of the whole bundle or store: in the browse UI (`assetcat serve`) open "
         "one of its packs, Edit curation, Bundle defaults; or set `license` in its curation file. Packs that "
@@ -768,6 +773,9 @@ FIXES = {
     "model_refs": "The model points at files that aren't there (often the artist's own paths, or a texture "
         "folder left out of the download); it shows untextured. `assetcat show <path>` lists them. Find the "
         "textures in the pack or re-download it.",
+    "text_encoding": "The text isn't UTF-8 and no likely encoding fits, so it was read as Windows-1252 and may show "
+        "wrong characters (in search too). Open the file in an editor that can pick the encoding to read the "
+        "license terms, then set the pack's license in its curation.",
     "errors": "Usually a damaged file or an unusual format variant. Re-download the pack if you need them; "
         "`assetcat index` retries them every time.",
 }
@@ -803,6 +811,7 @@ def cmd_doctor(ctx: Ctx):
         ("curation_problems", "curation file problems", cur.problems),
         ("unused_curation_keys", "curation keys matching no folder", lay.unused_curation),
         ("missing_sections", "section folders not found", lay.missing_sections),
+        ("key_collisions", "folders whose names give the same key", lay.key_collisions),
         ("license_unknown", "groups with packs whose license is unknown", per_group("lic")),
         ("ai_unknown", "groups with packs whose AI status is unknown", per_group("ai")),
         ("packs_nearly_empty", "packs with at most 2 files",
@@ -811,6 +820,8 @@ def cmd_doctor(ctx: Ctx):
         ("ai_vectors", "image vectors and subjects", _vector_items(con, cfg)),
         ("model_refs", "3D models whose textures or buffers aren't in the library",
          [f"{r[0]}  ({r[1]} missing)" for r in con.execute("SELECT path, missing FROM assets WHERE missing > 0 ORDER BY path LIMIT 200")]),
+        ("text_encoding", "readmes and licenses whose text encoding was guessed",
+         [r[0] for r in con.execute("SELECT path FROM files WHERE category='doc' AND info LIKE '%\"guessed\": true%' ORDER BY path LIMIT 200")]),
         ("pending", "files not synced yet, by group", [f"{n:>7}  {g}" for g, n in pending]),
         ("errors", f"files that failed to read ({n_err})",
          [f"{r[0]}: {r[1]}" for r in con.execute("SELECT path, error FROM files WHERE error IS NOT NULL ORDER BY path LIMIT 50")]),

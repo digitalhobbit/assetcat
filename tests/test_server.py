@@ -31,13 +31,13 @@ def test_frontend(client):
 def test_meta(client):
     m = client.get("/api/meta").json()
     assert m["sections"] == ["bundles", "kenney", "packs"]
-    assert m["stats"]["packs"] == 11 and m["stats"]["assets"] == 46 and m["stats"]["files"] == 72
+    assert m["stats"]["packs"] == 12 and m["stats"]["assets"] == 48 and m["stats"]["files"] == 75
     assert "cc0" in m["licenses"] and isinstance(m["shortlists"], list)
 
 
 def test_packs_list_and_filters(client):
     r = client.get("/api/packs").json()
-    assert r["total"] == 11
+    assert r["total"] == 12
     r = client.get("/api/packs", params={"q": "forest"}).json()
     assert {i["id"] for i in r["items"]} == {FOREST, "bundles/space-bundle/forest-tileset-copy"}
     r = client.get("/api/packs", params={"copies": "false"}).json()
@@ -209,7 +209,7 @@ def test_layout_roles_preview_save_apply(client, env):
 
     try:
         r = client.post("/api/reindex").json()
-        assert r["packs"] == 12
+        assert r["packs"] == 13
         v = client.post("/api/layout", json={"group": g}).json()
         assert not v["stale"] and v["indexed"] == {"packs": 5, "collections": 1}
         assert client.get("/api/pack", params={"id": f"{g}/{key}/psd"}).json()["parent_id"] == f"{g}/{key}"
@@ -217,7 +217,7 @@ def test_layout_roles_preview_save_apply(client, env):
         client.post("/api/edit/roles", json={"group": g, "roles": {key: None, f"{key}/png": None}})
         assert path.read_bytes() == original
         client.post("/api/reindex")
-    assert client.get("/api/meta").json()["stats"]["packs"] == 11
+    assert client.get("/api/meta").json()["stats"]["packs"] == 12
     assert snapshot(env["library"]) == env["before"]
 
 

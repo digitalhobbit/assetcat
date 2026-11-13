@@ -127,7 +127,9 @@ function StarMenu() {
 function parseHash() {
   const h = location.hash.replace(/^#\/?/, '');
   const [path, query = ''] = h.split('?');
-  const parts = path.split('/');
+  // the browser percent-encodes non-ASCII ids (ドット絵パック) in location.hash
+  const dec = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
+  const parts = path.split('/').map(dec);
   return { route: parts[0] || 'packs', rest: parts.slice(1).join('/'), params: new URLSearchParams(query) };
 }
 function useRoute() {

@@ -7,13 +7,15 @@ import json
 import posixpath
 import re
 import warnings
+import unicodedata
 import xml.etree.ElementTree as ET
 
 # Stamped on every file read. Bumping it alone re-reads nothing: also raise META_MIN to re-read every
-# file, or set the category in META_MIN_BY_CATEGORY to re-read only those (2: alpha kind, 3: 3D models).
-META_VERSION = 3
+# file, or set the category in META_MIN_BY_CATEGORY to re-read only those (2: alpha kind, 3: 3D models,
+# 4: docs that aren't UTF-8).
+META_VERSION = 4
 META_MIN = 2
-META_MIN_BY_CATEGORY = {"model": 3}
+META_MIN_BY_CATEGORY = {"model": 3, "doc": 4}
 
 MAX_DECODE_PIXELS = 4_000_000  # palette counting only below this
 MAX_TEXT = 60_000
@@ -35,9 +37,12 @@ def extract(job: tuple[str, str, str, str]) -> tuple[str, dict]:
         elif cat == "font":
             out.update(_font(path))
         elif cat == "doc":
-            t = _doc_text(path, ext)
+            enc: dict = {}
+            t = _doc_text(path, ext, enc)
             if t:
                 out["text"] = t[:MAX_TEXT]
+            if enc:
+                out["info"] = json.dumps(enc)
         elif cat == "model":
             info = _model(rel, path, ext)
             if info:
@@ -115,28 +120,84 @@ def _font(path: str) -> dict:
         return {"font_family": str(name)} if name else {}
 
 
-def _read_text(path: str) -> str:
-    raw = open(path, "rb").read(2_000_000)
-    for enc in ("utf-8-sig", "utf-16") if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else ("utf-8-sig",):
+# Code pages a readme that isn't UTF-8 is likely to be in. The detector only chooses among these:
+# left to pick from every code page it reads short Western text as cp775 or iso8859_10, and
+# EUC-JP as UTF-16 (UTF-16 without a BOM is recognized by its zero bytes instead).
+TEXT_ENCODINGS = ["cp1252", "cp932", "euc_jp", "gb18030", "big5", "cp949", "cp1251", "koi8_r",
+                  "cp1250", "cp1253", "cp1254", "cp1255", "cp1256"]
+_CJK = {"cp932", "euc_jp", "gb18030", "big5", "cp949"}
+
+
+def _utf16_order(raw: bytes) -> str | None:
+    """utf-16-le/-be for text without a BOM, from where the zero bytes of ASCII characters fall."""
+    head = raw[:4000]
+    n = len(head) // 2
+    if n < 4:
+        return None
+    even, odd = head[0:2 * n:2].count(0), head[1:2 * n:2].count(0)
+    if odd >= 0.3 * n and even <= 0.02 * n:
+        return "utf-16-le"
+    if even >= 0.3 * n and odd <= 0.02 * n:
+        return "utf-16-be"
+    return None
+
+
+def decode_text(raw: bytes) -> tuple[str, str, bool]:
+    """(text, encoding, guessed). UTF-8 and BOMs first, then a detector over TEXT_ENCODINGS;
+    when nothing fits, cp1252 with replacement characters and guessed=True."""
+    if raw[:2] in (b"\xff\xfe", b"\xfe\xff"):
         try:
-            return raw.decode(enc)
+            return raw.decode("utf-16"), "utf-16", False
         except UnicodeDecodeError:
             pass
-    return raw.decode("cp1252", errors="replace")
+    order = _utf16_order(raw)  # before UTF-8: ASCII in UTF-16 is valid UTF-8 too, zero bytes and all
+    if order:
+        try:
+            return raw.decode(order), order, False
+        except UnicodeDecodeError:
+            pass
+    try:
+        return raw.decode("utf-8-sig"), "utf-8", False
+    except UnicodeDecodeError:
+        pass
+    from charset_normalizer import from_bytes
+
+    best = from_bytes(raw, cp_isolation=TEXT_ENCODINGS).best()
+    if best is not None:
+        text = str(best)
+        # Mostly-ASCII Western text with one stray byte (Kenney's "16 × 16" in cp1252) can come back
+        # as cp932 with a half-width katakana; real CJK text always has full-width characters.
+        if best.encoding not in _CJK or any(unicodedata.east_asian_width(c) in "WF" for c in text):
+            return text, best.encoding, False
+        try:
+            return raw.decode("cp1252"), "cp1252", False
+        except UnicodeDecodeError:
+            return text, best.encoding, False
+    return raw.decode("cp1252", errors="replace"), "cp1252", True
+
+
+def _read_text(path: str, enc: dict | None = None) -> str:
+    """The file's text (first 2 MB). With `enc`, records {"encoding", "guessed"} there unless UTF-8."""
+    text, encoding, guessed = decode_text(open(path, "rb").read(2_000_000))
+    if enc is not None and encoding != "utf-8":
+        enc["encoding"] = encoding
+        if guessed:
+            enc["guessed"] = True
+    return text
 
 
 _TAG = re.compile(r"<[^>]+>")
 
 
-def _doc_text(path: str, ext: str) -> str | None:
+def _doc_text(path: str, ext: str, enc: dict | None = None) -> str | None:
     if ext in ("txt", "md"):
-        t = _read_text(path)
+        t = _read_text(path, enc)
     elif ext == "rtf":
         from striprtf.striprtf import rtf_to_text
 
-        t = rtf_to_text(_read_text(path), errors="ignore")
+        t = rtf_to_text(_read_text(path, enc), errors="ignore")
     elif ext in ("html", "htm"):
-        t = _read_text(path)
+        t = _read_text(path, enc)
         t = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", t)
         t = html.unescape(_TAG.sub(" ", t))
     elif ext == "pdf":

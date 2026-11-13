@@ -91,6 +91,16 @@ class Layout:
     packs: dict[str, Pack] = field(default_factory=dict)
     unused_curation: list[str] = field(default_factory=list)  # "group: key" with no matching folder
     missing_sections: list[str] = field(default_factory=list)
+    key_collisions: list[str] = field(default_factory=list)  # "<folder>: name, name" whose keys clashed
+
+
+def child_keys(d: Dir, lay: Layout | None = None) -> dict[str, str]:
+    """Key of each sub-folder of d (see classify.unique_keys); clashes are noted in lay."""
+    keys, clashes = C.unique_keys(c.name for c in d.dirs)
+    if lay is not None:
+        for names in clashes:
+            lay.key_collisions.append(f"{d.rel}: " + ", ".join(f"{n} -> {keys[n]}" for n in names))
+    return keys
 
 
 def _norm(name: str) -> str:
@@ -138,10 +148,11 @@ def build_layout(cfg: Config, cur: Curation) -> Layout:
         if sec.layout == "single-group":
             _add_group(cfg, lay, cur.group(sec.name).packs, sec, top, sec.name, used)
         else:
+            keys = child_keys(top, lay)
             for gdir in top.dirs:
                 if gdir.file_count() == 0:
                     continue
-                gid = f"{sec.name}/{C.slugify(gdir.name)}"
+                gid = f"{sec.name}/{keys[gdir.name]}"
                 _add_group(cfg, lay, cur.group(gid).packs, sec, gdir, gid, used)
             # loose files directly in the section folder are ignored
     for gid, gc in cur.groups.items():
@@ -161,8 +172,8 @@ def _add_group(cfg, lay: Layout, packs: dict[str, dict], sec: Section, gdir: Dir
     lay.groups[gid] = g
     g.loose.extend(gdir.files)
 
-    def child_key(parent_key: str, d: Dir) -> str:
-        s = C.slugify(d.name)
+    def child_key(parent_key: str, keys: dict[str, str], d: Dir) -> str:
+        s = keys[d.name]
         return f"{parent_key}/{s}" if parent_key else s
 
     def detect(c: Dir, depth_left: int | None) -> str:
@@ -173,10 +184,11 @@ def _add_group(cfg, lay: Layout, packs: dict[str, dict], sec: Section, gdir: Dir
         return "collection" if _is_collection(c) else "pack"
 
     def container(d: Dir, key: str, depth_left: int | None):
+        keys = child_keys(d, lay)
         for c in d.dirs:
             if c.file_count() == 0:
                 continue
-            k = child_key(key, c)
+            k = child_key(key, keys, c)
             ov = packs.get(k, {})
             if ov:
                 used.add((gid, k))
@@ -203,10 +215,11 @@ def _add_group(cfg, lay: Layout, packs: dict[str, dict], sec: Section, gdir: Dir
         if role != "collection":
             p.files.extend(f for sub in d.dirs for f in sub.iter_files())
             return
+        keys = child_keys(d, lay)
         for c in d.dirs:
             if c.file_count() == 0:
                 continue
-            k = child_key(key, c)
+            k = child_key(key, keys, c)
             ov = packs.get(k, {})
             if ov:
                 used.add((gid, k))
@@ -235,11 +248,14 @@ def find_group(cfg: Config, gid: str) -> tuple[Section, Dir] | None:
     if sec.layout == "single-group":
         return (sec, scan_dir(cfg, sec.folder, sec.folder, set(sec.ignore))) if not slug else None
     try:
-        names = sorted(e.name for e in os.scandir(fs_path(cfg.abs(sec.folder))) if e.is_dir(follow_symlinks=False))
+        names = [e.name for e in os.scandir(fs_path(cfg.abs(sec.folder))) if e.is_dir(follow_symlinks=False)]
     except OSError:
         return None
-    for n in names:
-        if n not in cfg.junk_dirs and n not in sec.ignore and C.slugify(n) == slug:
+    # the same siblings scan_dir keeps, so the keys match build_layout's
+    keys, _ = C.unique_keys(n for n in names if n not in cfg.junk_files and not n.startswith("._")
+                            and n not in cfg.junk_dirs and n not in sec.ignore)
+    for n, k in keys.items():
+        if k == slug:
             return sec, scan_dir(cfg, f"{sec.folder}/{n}", n)
     return None
 
@@ -259,10 +275,12 @@ def group_tree(cfg: Config, sec: Section, gdir: Dir, gid: str, packs: dict[str, 
             n["pack"] = owner[d.rel].id if d.rel in owner else None
         kids = [c for c in d.dirs if c.file_count() > 0]
         if n["role"] in ("grouping", "collection", "pack"):
-            n["kids"] = [node(c, f"{key}/{C.slugify(c.name)}") for c in kids]
+            keys = child_keys(d)
+            n["kids"] = [node(c, f"{key}/{keys[c.name]}") for c in kids]
         else:  # inside a pack, or ignored: not expanded further
             n["kids"], n["more"] = [], len(kids)
         return n
 
-    tree = [node(c, C.slugify(c.name)) for c in gdir.dirs if c.file_count() > 0]
+    keys = child_keys(gdir)
+    tree = [node(c, keys[c.name]) for c in gdir.dirs if c.file_count() > 0]
     return {"tree": tree, "packs": {p.id: p.role for p in lay.packs.values()}}

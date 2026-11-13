@@ -30,11 +30,11 @@ def test_init_wrote_profile_with_detected_layout(env):
 
 def test_totals(env, capsys):
     s = env["stats"]
-    assert (s["groups"], s["packs"], s["assets"], s["total"]) == (4, 11, 46, 72)
+    assert (s["groups"], s["packs"], s["assets"], s["total"]) == (5, 12, 48, 75)
     st = run_json(capsys, "stats")
-    assert st["files"][0] == 72
+    assert st["files"][0] == 75
     assert st["by_section"] == {"bundles": {"packs": 6, "assets": 21}, "kenney": {"packs": 4, "assets": 20},
-                                "packs": {"packs": 1, "assets": 5}}
+                                "packs": {"packs": 2, "assets": 7}}
     assert st["with_grid"] == 8
     assert st["duplicate_pack_pairs"] == 1
 
@@ -131,7 +131,7 @@ def test_text_output_smoke(capsys):
 def test_doctor(capsys):
     d = run_json(capsys, "doctor")
     assert [i["id"] for i in d["issues"]] == ["license_unknown", "ai_unknown", "packs_nearly_empty", "model_refs"]  # fresh stubs
-    assert len(d["issues"][0]["items"]) == 4
+    assert len(d["issues"][0]["items"]) == 5
 
 
 def test_reindex_is_incremental(env):
@@ -139,7 +139,7 @@ def test_reindex_is_incremental(env):
 
     s = run_index(env["cfg"], workers=1)
     assert (s["new"], s["changed"], s["removed"], s["created"]) == (0, 0, 0, [])
-    assert s["assets"] == 46
+    assert s["assets"] == 48
 
 
 def test_doctor_explains_each_problem(env, capsys):

@@ -6,11 +6,11 @@ Layout (three sections, like a typical hoard):
 
     Kenney Game Assets All-in-1/   one group, packs at <category>/<pack>, plus an ignored Archive/
     Bundles/<bundle>/...           groups with grouping folders (Graphics/, Audio/), a duplicate pack
-    Packs/<store>/<pack>           a store folder
+    Packs/<store>/<pack>           a store folder, and a store and pack named in Japanese
 
 Covers 3D models (GLB, OBJ + MTL, glTF + .bin, external textures, a missing one, an animation
 clip, a bundled render), PNG sheets with a Tiled .tsx, XML and JSON texture atlases, a Kenney Tilesheet.txt, a size
-in a file name, PNG/PSD and WAV/OGG variants, a font, readmes and licenses, preview images.
+in a file name, PNG/PSD and WAV/OGG variants, a font, readmes and licenses (one in Shift-JIS), preview images.
 Everything is deterministic: the same files and bytes every run.
 """
 
@@ -26,6 +26,8 @@ import wave
 from pathlib import Path
 
 KENNEY = "Kenney Game Assets All-in-1"
+# "Dot-art pack. License: commercial use OK. No credit needed. Redistribution prohibited."
+SJIS_README = "ドット絵パック\nライセンス: 商用利用可能。クレジット表記不要。\n再配布は禁止です。\n"
 
 
 def png(w: int, h: int, seed: int, colors: int = 6) -> bytes:
@@ -255,6 +257,11 @@ def build(root: Path) -> Path:
     for i in range(3):
         add(f"{u}/buttons/button_{i}.png", png(48, 16, 81 + i))
     add(f"{u}/cursors_16x16.png", png(64, 16, 85))  # grid from the name
+    # a store and pack named in Japanese, its readme in Shift-JIS (keys and text beyond ASCII and UTF-8)
+    j = "Packs/ドット工房/ドット絵パック"
+    add(f"{j}/readme.txt", SJIS_README.encode("shift_jis"))
+    add(f"{j}/キャラ/勇者.png", png(32, 32, 90))
+    add(f"{j}/キャラ/スライム.png", png(32, 32, 91))
 
     # junk the scanner must skip
     add(f"{b}/.DS_Store", b"\0" * 32)

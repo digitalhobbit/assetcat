@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import sys
 import tomllib
 from dataclasses import dataclass, field
@@ -159,10 +160,9 @@ def resolve_paths(library: str | None = None, profile: str | None = None) -> tup
 def profile_id(profile: Path) -> str:
     """Cache folder name for a profile: readable and stable on this machine."""
     lib_name = profile.parent.name if profile.name == PROFILE_DIRNAME else profile.name
-    from .classify import slugify
-
     h = hashlib.blake2b(str(profile).encode("utf-8"), digest_size=4).hexdigest()
-    return f"{slugify(lib_name)[:40]}-{h}"
+    name = re.sub(r"[^a-z0-9]+", "-", lib_name.lower()).strip("-") or "x"  # ASCII, as since 1.0: caches stay put
+    return f"{name[:40]}-{h}"
 
 
 def load_config(library: str | None = None, profile: str | None = None) -> Config:

@@ -185,6 +185,18 @@ def main():
             check(page.locator(".player").count() == 1, "clicking a sound opens the player bar")
             shot("audio")
 
+        # a pack whose id isn't ASCII (ドット絵パック): the browser percent-encodes it in the hash
+        uni = next((p for p in graphics + audio + fonts + models if not p["id"].isascii()), None)
+        if uni:
+            page.goto(base + "#/pack/" + uni["id"])
+            page.wait_for_selector(f"h1:has-text({json.dumps(uni['name'], ensure_ascii=False)})", timeout=20000)
+            page.wait_for_function("() => [...document.querySelectorAll('.tile img')].some(i => i.complete && i.naturalWidth > 0)", timeout=20000)
+            check(True, f"pack page with a non-ASCII id: {uni['id']}")
+            page.locator("text=Change pack tree").click()
+            page.wait_for_selector(".lnode.focus", timeout=30000)
+            check(page.locator(".lnode.focus").count() == 1, "its layout page opens with the pack highlighted")
+            shot("unicode")
+
         if fonts:
             page.goto(base + "#/pack/" + fonts[0]["id"])
             page.wait_for_selector(f"h1:has-text({json.dumps(fonts[0]['name'])})", timeout=20000)
